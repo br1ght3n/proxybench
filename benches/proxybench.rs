@@ -15,6 +15,7 @@ async fn make_requests(url: &'static str, conf: &'static Configuration) {
     let todo = Arc::new(AtomicIsize::new(conf.requests as isize));
     let mut set = JoinSet::new();
 
+    // println!("url: {}", url);
     let client = {
         let mut builder = reqwest::ClientBuilder::new()
             .no_gzip()
@@ -60,6 +61,11 @@ async fn make_requests(url: &'static str, conf: &'static Configuration) {
                     .context("request failed")?
                     .error_for_status()
                     .context("error status")?;
+                
+                // print the response body size
+                // let response_size = response.content_length().unwrap_or(0);
+                // let response_size_mb = response_size as f64 / (1024.0 * 1024.0);
+                // println!("url: {}, Response body size: {:.2} MB ({} bytes)", url, response_size_mb, response_size);
             }
             Ok(())
         });
@@ -105,6 +111,9 @@ pub fn bench(c: &mut Criterion) {
     }
 
     for conf in confs {
+        if conf.proxy.is_some() {
+            continue;
+        }
         let mut g = c.benchmark_group("proxy");
         g.sample_size(10);
         g.warm_up_time(Duration::from_millis(10));
@@ -125,7 +134,7 @@ pub fn bench(c: &mut Criterion) {
                         PlaintextHttp1 => "http://",
                         EncryptedHttp1 | EncryptedHttp2 => "https://",
                     };
-                    let url = format!("{scheme}{server_addr}");
+                    let url = format!("{scheme}test.example.com:{}", server_addr.port());
                     Box::leak(Box::new(url))
                 };
 

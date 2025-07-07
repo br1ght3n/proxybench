@@ -23,7 +23,7 @@ pub const HUNDRED_MEGABYTES: &[u8] = &[0u8; 1024 * 1024 * 100];
 const OK: &[u8] = "OK".as_bytes();
 
 pub async fn start_server(configuration: Protocol) -> Result<(SocketAddr, JoinHandle<()>)> {
-    let listener = TcpListener::bind("127.0.0.1:0").await?;
+    let listener = TcpListener::bind("0.0.0.0:0").await?;
     let acceptor = match configuration {
         Protocol::PlaintextHttp1 => None,
         Protocol::EncryptedHttp1 => Some(tls_acceptor("http/1.1")),
@@ -76,7 +76,7 @@ pub async fn start_server(configuration: Protocol) -> Result<(SocketAddr, JoinHa
 }
 
 fn tls_acceptor(alpn: &str) -> TlsAcceptor {
-    let cert = generate_simple_self_signed(vec!["localhost".to_string()]).unwrap();
+    let cert = generate_simple_self_signed(vec!["test.example.com".to_string()]).unwrap();
     let key = PrivatePkcs8KeyDer::from(cert.key_pair.serialize_der()).into();
     let mut config = rustls::ServerConfig::builder()
         .with_no_client_auth()
